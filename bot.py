@@ -1,7 +1,11 @@
 import discord
 from discord.ext import commands
+from colorama import init as initANSI
+import modules.ColorPrint as ColorPrint
 import json
 import os
+
+initANSI()
 
 config = json.load(open("config.json"))
 
@@ -17,9 +21,24 @@ if (config["cogloader_enabled"]):
         try:
             bot.load_extension(f"cogs.{filename[:-3]}")
         except Exception as e:
-            print(f"Failed to load {filename} ({e})")
+            ColorPrint.fail(f"Failed to load {filename}. ({e})")
         else:
-            print(f"{filename} loaded")
+            print(f"{filename} loaded.")
+
+# EventHandlers
+@bot.event
+async def on_ready():
+    prefix = config["prefix"]
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=f"music ({prefix}help)"))
+    ColorPrint.blue(f"Bot ready! ({bot})")
+
+@bot.event
+async def on_command_error(ctx, error):
+    ColorPrint.warn(error, f"Command error duty to {ctx.message.author} ({ctx.message.author.id})")
+
+@bot.event
+async def on_command_completion(ctx):
+    print(f"[{ColorPrint.bluecolor}Message{ColorPrint.reset}] {ctx.message.author} ({ctx.message.author.id} used command \"{ColorPrint.bluecolor}{ctx.message.content}{ColorPrint.reset}\".)")
 
 # COG management
 @bot.command()
@@ -34,9 +53,9 @@ async def pyload(ctx, extension):
     try:
         bot.load_extension(f"cogs.{extension}")
     except Exception as e:
-        await ctx.send(f"Failed to load {extension}.py ({e})")
+        await ctx.send(f"Failed to load {extension}.py. ({e})")
     else:
-        await ctx.send(f"{extension}.py loaded")
+        await ctx.send(f"{extension}.py loaded.")
 
 @bot.command()
 async def pyunload(ctx, extension):
@@ -50,11 +69,11 @@ async def pyunload(ctx, extension):
     try:
         bot.unload_extension(f"cogs.{extension}")
     except Exception as e:
-        await ctx.send(f"Failed to unload {extension}.py ({e})")
+        await ctx.send(f"Failed to unload {extension}.py. ({e})")
     else:
-        await ctx.send(f"{extension}.py unloaded")
+        await ctx.send(f"{extension}.py unloaded.")
 
-
+# Ping command
 @bot.command()
 async def ping(ctx):
     await ctx.send(f"pong in {bot.latency}!")
