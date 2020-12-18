@@ -1,11 +1,9 @@
+#from modules import *
+from clrprint import *
 import discord
 from discord.ext import commands
-from colorama import init as ColordTextInit
-import modules.ColorPrint as ColorPrint
 import json
 import os
-
-ColordTextInit()
 
 config = json.load(open("config.json"))
 
@@ -16,7 +14,7 @@ bot = commands.Bot(
 )
 
 # Help command
-cmds = dict()
+cmds = { "help": "Bot commands (shows this window)" }
 
 @bot.command()
 async def help(ctx):
@@ -37,17 +35,19 @@ async def help(ctx):
 async def on_ready():
     prefix = config["prefix"]
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=f"music ({prefix}help)"))
-    ColorPrint.blue(f"Bot ready! ({bot})")
+    clrprint("Bot ready! (", bot, ")", clr=["blue", "default", "blue"])
 
 @bot.event
 async def on_command_error(ctx, error):
-    ColorPrint.fail(f"Command error duty to {ctx.message.author} ({ctx.message.author.id}), message content: {ctx.message.content};\n{error}")
+    clrprint("Command error duty to", ctx.message.author, "(", ctx.message.author.id, ") message content:", ctx.message.content, ";\n", error,
+        clr=["default", "red", "default", "red", "default", "red", "default", "red"])
     errTxt = str(error).replace("\n", " ")
     await ctx.send(f"Failed to handle \"{ctx.message.content}\" command.\n\n`{errTxt}`")
 
 @bot.event
 async def on_command_completion(ctx):
-    print(f"[{ColorPrint.bluecolor}Message{ColorPrint.reset}] {ctx.message.author} ({ctx.message.author.id} used command \"{ColorPrint.bluecolor}{ctx.message.content}{ColorPrint.reset}\".)")
+    clrprint(ctx.message.author, "(", ctx.message.author.id, ") used command \"", ctx.message.content, "\"",
+        clr=["blue", "default", "blue", "default", "blue", "default"])
 
 #COG Auto Loader
 if (config["cogloader_enabled"]):
@@ -56,9 +56,10 @@ if (config["cogloader_enabled"]):
         try:
             bot.load_extension(f"cogs.{filename[:-3]}")
         except Exception as e:
-            ColorPrint.fail(f"Failed to load {filename}. ({e})")
+            clrprint(f"Failed to load" , filename, "(", e, ")",
+                clr=["default", "red", "default", "red", "default"])
         else:
-            print(f"{filename} loaded.")
+            clrprint(filename, "loaded.", clr=["blue", "default"])
 
 # COG management
 @bot.command()
